@@ -1,7 +1,6 @@
 from graph import *
 from graph_io import *
 from list_and_stack import *
-from exercise_4 import *
 from profiler import profiler
 
 
