@@ -77,22 +77,25 @@ def count_isomorphisms(G: Graph, H: Graph, D:list, I: list, all_twins: list, cou
     return num
 
 
-def compare_graphs(G: Graph, H: Graph, g_label, h_label):
+def compare_graphs(G: Graph, H: Graph, g_label, h_label, use_twins, count):
     copy1, copy2 = G.deep_copy(), H.deep_copy()
     twins = count_twins(copy1)
-    total = count_isomorphisms(copy1, copy2, [], [], twins, useTwins=True, count=True)
+    total = count_isomorphisms(copy1, copy2, [], [], twins, useTwins=use_twins, count=count)
 
     return total
 
 
-def run(path):
+def run(path, use_twins: bool, count: bool):
     with open(path) as f:
         comparison_graphs = load_graph(f, read_list=True)
 
     matching_graphs = []
-    
+
     print(path)
-    print('Sets of possibly isomorphic graphs:')
+    if count:
+        print('Sets of isomorphic graphs and the number of automorphisms:')
+    else:
+        print('Sets of isomorphic graphs:')
 
     slow_index = 0
     fast_index = 0
@@ -110,7 +113,7 @@ def run(path):
 
             while fast_index < number_of_graphs:
                 if slow_index < fast_index:
-                    new_total = compare_graphs(graphs[slow_index], graphs[fast_index], slow_index, fast_index)
+                    new_total = compare_graphs(graphs[slow_index], graphs[fast_index], slow_index, fast_index, use_twins, count)
                     if new_total != 0:
                         temp.append(fast_index)
                         total = new_total
@@ -119,7 +122,10 @@ def run(path):
             if len(temp) > 0:
                 temp.insert(0, slow_index)
                 matching_graphs.append(temp)
-                print(f'{temp} {total}')
+                if count:
+                    print(f'{temp} {total}')
+                else:
+                    print(f'{temp}')
 
             slow_index += 1
             fast_index = 0
@@ -127,7 +133,7 @@ def run(path):
 
 
 @profile
-def run_count_sample():
+def run_count_sample(use_twins: bool, count: bool):
     base_path = "graphs"
     sample_names = {
         # "bigtrees": [1, 2, 3],
@@ -146,7 +152,7 @@ def run_count_sample():
 
     for sample_name in sample_names:
         for identifier in sample_names[sample_name]:
-            run(f'{base_path}/{sample_name}{identifier}{extension}')
+            run(f'{base_path}/{sample_name}{identifier}{extension}', use_twins, count)
 
 
-run_count_sample()
+run_count_sample(use_twins=True, count=True)
