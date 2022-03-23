@@ -1,13 +1,13 @@
 import cProfile, pstats, io
 
 
-def profiler(fnc):
+def profile(fnc):
     """A decorator that uses cProfile to profile a function"""
 
-    def inner(args, **kwargs):
+    def inner(*args, **kwargs):
         pr = cProfile.Profile()
         pr.enable()
-        retval = fnc(args, **kwargs)
+        retval = fnc(*args, **kwargs)
         pr.disable()
         s = io.StringIO()
         sort_by = 'cumulative'
