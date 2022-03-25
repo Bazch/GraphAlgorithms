@@ -1,7 +1,12 @@
+import math
+
+from profiler import profile
 from graph import *
 from graph_io import *
 from list_and_stack import *
 
+
+@profile
 def count_tree_isomorphisms(G: Graph, isDebug=False):
 
     while len(G.vertices) > 2:
@@ -28,6 +33,7 @@ def count_tree_isomorphisms(G: Graph, isDebug=False):
             child_dict = {}
             codes = []
             codes2 = []
+            aut = 1
 
             if hasattr(parent, 'code'):
                 codes.append(parent.code[1:-1])
@@ -35,23 +41,33 @@ def count_tree_isomorphisms(G: Graph, isDebug=False):
                 codes.append(vertex.code)
             for vertex in parent.children:
                 codes2.append(vertex.code)
-            codes.sort()
+                if vertex.code in child_dict:
+                    child_dict[vertex.code].append(vertex)
+                else:
+                    child_dict[vertex.code] = [vertex]
+
+            for code in child_dict:
+                for vertex in child_dict[code]:
+                    aut = aut * vertex.aut
+                aut = aut * math.factorial(len(child_dict[code]))
+            parent.aut = aut
+            codes2.sort()
             parent_encoding = ''
-            for code in codes:
+            for code in codes2:
                 parent_encoding = parent_encoding + code
-            parent.code = f'({parent_encoding})'\
+            parent.code = f'({parent_encoding})'
 
 
 
 
-
-with open('graphs/trees36.grl') as f:
+with open('graphs/bigtrees3.grl') as f:
     graph_list = load_graph(f, read_list=True)
 
 G = graph_list[0][0]
 
 with open('graphs/results/before.dot', 'w') as f:
     write_dot(G, f)
+
 
 count_tree_isomorphisms(G, False)
 
@@ -61,4 +77,4 @@ with open('graphs/results/after.dot', 'w') as f:
 for vertex in G.vertices:
     if hasattr(vertex, 'code'):
         print(vertex.code)
-        print(vertex.children)
+        print(vertex.aut)
