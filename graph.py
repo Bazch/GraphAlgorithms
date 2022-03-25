@@ -43,6 +43,7 @@ class Vertex(object):
         self._graph = graph
         self.label = label
         self._incidence = {}
+        self._children = []
 
     def __repr__(self):
         """
@@ -77,6 +78,12 @@ class Vertex(object):
 
         self._incidence[other].add(edge)
 
+    def _remove_incidence(self, edge: "Edge"):
+
+        other = edge.other_end(self)
+        if other in self._incidence:
+            del self._incidence[other]
+
     @property
     def graph(self) -> "Graph":
         """
@@ -106,11 +113,19 @@ class Vertex(object):
         return list(self._incidence.keys())
 
     @property
+    def children(self) -> List["Vertex"]:
+
+        return self._children
+
+    @property
     def degree(self) -> int:
         """
         Returns the degree of the vertex
         """
         return sum(map(len, self._incidence.values()))
+
+    def add_child(self, v: "Vertex"):
+       self._children.append(v)
 
 
 class Edge(object):
@@ -294,6 +309,17 @@ class Graph(object):
 
         self._v.append(vertex)
 
+    def remove_vertex(self, vertex: "Vertex"):
+
+        if vertex.graph != self:
+            raise GraphError("A vertex must belong to the graph it is removed from")
+
+        if vertex.degree > 0:
+            for edge in vertex.incidence:
+                self.remove_edge(edge)
+
+        self._v.remove(vertex)
+
     def add_edge(self, edge: "Edge"):
         """
         Add an edge to the graph. And if necessary also the vertices.
@@ -317,6 +343,16 @@ class Graph(object):
 
         edge.head._add_incidence(edge)
         edge.tail._add_incidence(edge)
+
+    def remove_edge(self, edge: Edge):
+
+        if edge.head.graph != self or edge.tail.graph != self:
+            raise GraphError('The edge must belong to the graph it is removed from')
+
+        edge.head._remove_incidence(edge)
+        edge.tail._remove_incidence(edge)
+
+        self._e.remove(edge)
 
     def increase_highest_vertex(self):
         self._highest_vertex += 1
