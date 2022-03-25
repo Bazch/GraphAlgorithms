@@ -2,6 +2,7 @@ from profiler import *
 from graph import *
 from graph_io import *
 from partition_refinement import color_refinement
+from tree_functions import *
 from twin_detection import *
 
 
@@ -74,11 +75,27 @@ def count_isomorphisms(G: Graph, H: Graph, D:list, I: list, all_twins: list, cou
         if num > 0 and not count:
             return num
         # If we only want to know if the graphs are isomorphic, we can stop once we found at least 1 automorphism
+
     return num
+
+
+def compare_trees(G: Graph, H: Graph):
+    code_c, aut_c = count_tree_isomorphisms(G)
+    code_h, aut_h = count_tree_isomorphisms(H)
+    if code_c != code_h:
+        return 0
+    return aut_c
 
 
 def compare_graphs(G: Graph, H: Graph, g_label, h_label, use_twins, count):
     copy1, copy2 = G.deep_copy(), H.deep_copy()
+    is_tree1, is_tree2 = is_graph_tree(copy1), is_graph_tree(copy2)
+    if is_tree1:
+        if not is_tree2:
+            return 0
+        total = compare_trees(copy1, copy2)
+        return total
+
     twins = count_twins(copy1)
     total = count_isomorphisms(copy1, copy2, [], [], twins, useTwins=use_twins, count=count)
 
@@ -137,15 +154,18 @@ def run_count_sample(use_twins: bool, count: bool):
     base_path = "graphs"
     sample_names = {
         # "bigtrees": [1, 2, 3],
+        "bigtrees": [1, 2, 3],
         # "cographs": [1],
         # "cubes": [3, 4, 5, 6, 7, 8, 9],
+        "cubes": [3, 4, 5, 6],
         # "modules": ["C", "D"],
         # "products": [72, 216],
-        "products": [72],
-        "torus": [24],
         # "torus": [24, 72, 144],
+        "torus": [24, 72, 144],
         # "trees": [11, 36, 90],
+        "trees": [11, 36, 90],
         # "wheeljoin": [14, 19, 25, 33],
+        "wheeljoin": [14, 19]
         # "wheelstar": [12, 15, 16]
     }
     extension = ".grl"
