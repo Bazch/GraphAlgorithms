@@ -1,3 +1,6 @@
+import gc
+from graph import *
+
 class Node:
     def __init__(self, data):
         self.data = data
@@ -17,7 +20,7 @@ class doubly_linked_list:
     def __iter__(self):
         current = self.head
         while current is not None:
-            yield current
+            yield current.data
             current = current.next
 
     def __reversed__(self):
@@ -27,6 +30,18 @@ class doubly_linked_list:
         while current is not None:
             yield current
             current = current.prev
+
+    def __repr__(self):
+        string = "["
+        if self.head is not None:
+            current = self.head
+            string += str(current.data)
+            current = current.next
+            while (current is not None):
+                string += f', {current.data}'
+                current = current.next
+        string += ']'
+        return string
 
     def push(self, new_val):
         new_node = Node(new_val)
@@ -54,30 +69,29 @@ class doubly_linked_list:
 
     def listprint(self, node):
         while node is not None:
-            print(node.data),
-            last = node
+            print(node.data)
             node = node.next
 
-    def remove(self, removed_node):
-        head_val = self.head
-        if head_val is not None:
-            if head_val.data == removed_node:
-                self.head = head_val.next
-                head_val = None
-                self.size -= 1
-                return
-            while head_val is not None:
-                if head_val.data == removed_node:
-                    break
-                prev = head_val
-                head_val = head_val.next
-            if head_val is None:
-                return
+    def remove(self, value):
+        if self.head is None:
+            print("Empty linked list")
 
-            prev.next = head_val.next
-            head_val.next.prev = head_val.prev
-            head_val = None
-            self.size -= 1
+        if self.head.data == value:
+            self.head = self.head.next
+            if self.head is not None:
+                self.head.prev = None
+        else:
+            temp = self.head
+            while temp is not None and temp.data != value:
+                temp = temp.next
+            if temp is None:
+                print("Deleted node is not found")
+            else:
+                temp.prev.next = temp.next
+                if temp.next is not None:
+                    temp.next.prev = temp.prev
+        self.size -= 1
+        gc.collect()
 
 
 class stack:
