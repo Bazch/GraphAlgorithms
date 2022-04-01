@@ -1,3 +1,5 @@
+from fast_color_partition import refine
+from list_and_stack import doubly_linked_list
 from profiler import *
 from graph import *
 from graph_io import *
@@ -8,9 +10,9 @@ from twin_detection import *
 
 def count_isomorphisms(G: Graph, H: Graph, D:list, I: list, all_twins: list, count=False, useTwins=False):
     # Pre-processing
+    tempD = D[:]
+    tempI = I[:]
     for vertex in G.vertices:
-        vertex.label = 0
-    for vertex in H.vertices:
         vertex.label = 0
     if len(D) != 0:
         for i, vertex in enumerate(D):
@@ -19,11 +21,20 @@ def count_isomorphisms(G: Graph, H: Graph, D:list, I: list, all_twins: list, cou
 
     # Do color refinement
     result = None
-    G.highest_vertex_number(), H.highest_vertex_number()
-    while result is None:
-        result, partition = color_refinement(G,H)
+    G.highest_vertex_number()
+    #while result is None:
+        #result, partition = color_refinement(G,H)
+    result, partition = refine(G)
     if result == 1 or result == 0:
         return result
+
+    for color in partition:
+        if len(color) == 2:
+            for vertex in color.vertices:
+                if vertex.original_graph != H:
+                    tempD.append(vertex)
+                else:
+                    tempI.append(vertex)
 
     # Variables for the color/label to use (C) and which vertex to branch upon (vertex_x)
     C = -1
@@ -34,32 +45,33 @@ def count_isomorphisms(G: Graph, H: Graph, D:list, I: list, all_twins: list, cou
     if useTwins:
         for twins in all_twins:
             for vertex in twins:
-                if len(partition[vertex.label]) >= 4:
-                    C = vertex.label
-                    vertex_x = vertex
+                for color in partition:
+                    if len(color) >= 4:
+                        C = color
+                        vertex_x = vertex
+                        break
+                # If we have found a twin, we don't need to keep looking for a vertex to branch upon
+                if vertex_x is not None:
                     break
-            # If we have found a twin, we don't need to keep looking for a vertex to branch upon
-            if vertex_x is not None:
-                break
 
     # If there are no twins, pick a color with the least amount of vertices (while still having at least 4)
-    if vertex_x is None or C == -1:
+    if C == -1:
         amount_of_vertices = sys.maxsize
-        for label in partition:
-            if amount_of_vertices > len(partition[label]) >= 4:
-                C = label
-                amount_of_vertices = len(partition[label])
+        for color in partition:
+            if amount_of_vertices > len(color) >= 4:
+                C = color
+                amount_of_vertices = len(color)
 
     # Loop over all vertices in the partition and only collect the ones from graph H
     vertices_in_H = []
-    for vertex in partition[C]:
-        if vertex.graph == H:
+    for vertex in C.vertices:
+        if vertex.original_graph == H:
             vertices_in_H.append(vertex)
         elif vertex_x is None:
             vertex_x = vertex
 
     # We create a copy from D and add our vertex_x to it for branching
-    tempD = D[:]
+    # tempD = D[:]
     tempD.append(vertex_x)
 
     num = 0
@@ -68,10 +80,9 @@ def count_isomorphisms(G: Graph, H: Graph, D:list, I: list, all_twins: list, cou
     # We use the vertices selected earlier from graph G and H in D and I respectively
     for vertex in vertices_in_H:
         # Make sure to copy the list and not actually change it, to make sure each iteration doesn't keep adding to I
-        tempI = I[:]
-        tempI.append(vertex)
-        num += count_isomorphisms(G, H, tempD, tempI, all_twins, count=count, useTwins=useTwins)
-
+        temp2I = tempI[:]
+        temp2I.append(vertex)
+        num += count_isomorphisms(G, H, tempD, temp2I, all_twins, count=count, useTwins=useTwins)
         if num > 0 and not count:
             return num
         # If we only want to know if the graphs are isomorphic, we can stop once we found at least 1 automorphism
@@ -97,7 +108,8 @@ def compare_graphs(G: Graph, H: Graph, g_label, h_label, use_twins, count):
         return total
 
     twins = count_twins(copy1)
-    total = count_isomorphisms(copy1, copy2, [], [], twins, useTwins=use_twins, count=count)
+    I = copy1+copy2
+    total = count_isomorphisms(I, copy2, [], [], twins, useTwins=use_twins, count=count)
 
     return total
 
@@ -154,18 +166,14 @@ def run_count_sample(use_twins: bool, count: bool):
     base_path = "graphs"
     sample_names = {
         # "bigtrees": [1, 2, 3],
-        "bigtrees": [1, 2, 3],
         # "cographs": [1],
         # "cubes": [3, 4, 5, 6, 7, 8, 9],
-        "cubes": [3, 4, 5, 6],
+        "cubes": [3, 4, 5]
         # "modules": ["C", "D"],
         # "products": [72, 216],
         # "torus": [24, 72, 144],
-        "torus": [24, 72, 144],
         # "trees": [11, 36, 90],
-        "trees": [11, 36, 90],
         # "wheeljoin": [14, 19, 25, 33],
-        "wheeljoin": [14, 19]
         # "wheelstar": [12, 15, 16]
     }
     extension = ".grl"
@@ -174,5 +182,16 @@ def run_count_sample(use_twins: bool, count: bool):
         for identifier in sample_names[sample_name]:
             run(f'{base_path}/{sample_name}{identifier}{extension}', use_twins, count)
 
+
+# with open('graphs/wheeljoin14.grl') as f:
+#     graph_list = load_graph(f, read_list=True)
+#
+# G = graph_list[0][0]
+# H = graph_list[0][1]
+#
+# print("Without use twins\n")
+# compare_graphs(G, H, 0, 1, use_twins=False, count=True)
+# print("\nWith use twins\n")
+# compare_graphs(G, H, 0, 1, use_twins=True, count=True)
 
 run_count_sample(use_twins=True, count=True)

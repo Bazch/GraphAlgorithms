@@ -366,10 +366,12 @@ class Graph(object):
         I = Graph(directed=False)
         vertex_dict = {}
         for vertex in self.vertices:
-            new_vertex = Vertex(I)
+            new_vertex = Vertex(I, vertex.label)
+            new_vertex.original_graph = self
             vertex_dict[vertex] = new_vertex
         for vertex in other.vertices:
-            new_vertex = Vertex(I)
+            new_vertex = Vertex(I, vertex.label)
+            new_vertex.original_graph = other
             vertex_dict[vertex] = new_vertex
         for edge in self.edges:
             new_edge = Edge(vertex_dict[edge.tail], vertex_dict[edge.head])
@@ -474,7 +476,7 @@ class UnsafeGraph(Graph):
         if right is None:
             return left
 
-        return left | right
+        return Union[left, right]
 
     def is_adjacent(self, u: "Vertex", v: "Vertex") -> bool:
         return v in u._incidence or (not self._directed and u in v._incidence)
