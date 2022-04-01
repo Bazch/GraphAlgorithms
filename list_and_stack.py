@@ -80,6 +80,7 @@ class doubly_linked_list:
             self.head = self.head.next
             if self.head is not None:
                 self.head.prev = None
+            self.size -= 1
         else:
             temp = self.head
             while temp is not None and temp.data != value:
@@ -90,8 +91,7 @@ class doubly_linked_list:
                 temp.prev.next = temp.next
                 if temp.next is not None:
                     temp.next.prev = temp.prev
-        self.size -= 1
-        gc.collect()
+                self.size -= 1
 
 
 class stack:

@@ -168,10 +168,10 @@ def run_count_sample(use_twins: bool, count: bool):
         # "bigtrees": [1, 2, 3],
         # "cographs": [1],
         # "cubes": [3, 4, 5, 6, 7, 8, 9],
-        "cubes": [3, 4, 5]
         # "modules": ["C", "D"],
         # "products": [72, 216],
         # "torus": [24, 72, 144],
+        "torus": [24, 72, 144]
         # "trees": [11, 36, 90],
         # "wheeljoin": [14, 19, 25, 33],
         # "wheelstar": [12, 15, 16]
@@ -182,16 +182,5 @@ def run_count_sample(use_twins: bool, count: bool):
         for identifier in sample_names[sample_name]:
             run(f'{base_path}/{sample_name}{identifier}{extension}', use_twins, count)
 
-
-# with open('graphs/wheeljoin14.grl') as f:
-#     graph_list = load_graph(f, read_list=True)
-#
-# G = graph_list[0][0]
-# H = graph_list[0][1]
-#
-# print("Without use twins\n")
-# compare_graphs(G, H, 0, 1, use_twins=False, count=True)
-# print("\nWith use twins\n")
-# compare_graphs(G, H, 0, 1, use_twins=True, count=True)
 
 run_count_sample(use_twins=True, count=True)
