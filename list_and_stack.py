@@ -20,7 +20,7 @@ class doubly_linked_list:
     def __iter__(self):
         current = self.head
         while current is not None:
-            yield current.data
+            yield current
             current = current.next
 
     def __reversed__(self):
@@ -93,6 +93,30 @@ class doubly_linked_list:
                     temp.next.prev = temp.prev
                 self.size -= 1
 
+    def remove_node(self, dele):
+
+        # Base Case
+        if self.head is None or dele is None:
+            return
+
+        # If node to be deleted is head node
+        if self.head == dele:
+            self.head = dele.next
+            self.size -= 1
+            return
+
+        # Change next only if node to be deleted is NOT
+        # the last node
+        if dele.next is not None:
+            dele.next.prev = dele.prev
+
+        # Change prev only if node to be deleted is NOT
+        # the first node
+        if dele.prev is not None:
+            dele.prev.next = dele.next
+
+        self.size -= 1
+
 
 class stack:
 
@@ -129,3 +153,7 @@ class stack:
             return True
         else:
             return False
+
+# G = Graph(n=10, directed=False)
+# DLL = doubly_linked_list()
+# DLL.append

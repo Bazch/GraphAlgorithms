@@ -28,13 +28,13 @@ def count_isomorphisms(G: Graph, H: Graph, D:list, I: list, all_twins: list, cou
     if result == 1 or result == 0:
         return result
 
-    for color in partition:
-        if len(color) == 2:
-            for vertex in color.vertices:
-                if vertex.original_graph != H:
-                    tempD.append(vertex)
+    for color_node in partition:
+        if len(color_node.data) == 2:
+            for vertex_node in color_node.data.vertices:
+                if vertex_node.data.original_graph != H:
+                    tempD.append(vertex_node.data)
                 else:
-                    tempI.append(vertex)
+                    tempI.append(vertex_node.data)
 
     # Variables for the color/label to use (C) and which vertex to branch upon (vertex_x)
     C = -1
@@ -58,17 +58,17 @@ def count_isomorphisms(G: Graph, H: Graph, D:list, I: list, all_twins: list, cou
     if C == -1:
         amount_of_vertices = sys.maxsize
         for color in partition:
-            if amount_of_vertices > len(color) >= 4:
-                C = color
-                amount_of_vertices = len(color)
+            if amount_of_vertices > len(color.data) >= 4:
+                C = color.data
+                amount_of_vertices = len(color.data)
 
     # Loop over all vertices in the partition and only collect the ones from graph H
     vertices_in_H = []
-    for vertex in C.vertices:
-        if vertex.original_graph == H:
-            vertices_in_H.append(vertex)
+    for vertex_node in C.vertices:
+        if vertex_node.data.original_graph == H:
+            vertices_in_H.append(vertex_node.data)
         elif vertex_x is None:
-            vertex_x = vertex
+            vertex_x = vertex_node.data
 
     # We create a copy from D and add our vertex_x to it for branching
     # tempD = D[:]
