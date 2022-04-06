@@ -15,6 +15,9 @@ class ColorClass:
     def __str__(self) -> str:
         return f'ColorClass: {self._id} V=[' + ", ".join(map(str, self._vertices)) + ']'
 
+    def __eq__(self, other):
+        return self._id == other._id and len(self._vertices) == len(other._vertices)
+
     @property
     def vertices(self) -> doubly_linked_list:
         return self._vertices
@@ -92,9 +95,9 @@ def refine(graph: Graph):
         for color_key in color_dict:
             number_of_neighbours_dict = color_dict[color_key]
             for count in number_of_neighbours_dict:
-                if 2 < len(color_dict[color_key][count]) < len(current_color.vertices):
-                    graph.increase_highest_vertex()
-                    new_color = current_color.split(graph.highest_vertex, color_dict[color_key][count])
+                if len(color_dict[color_key][count]) < len(current_color.vertices) and len(color_dict[color_key]) > 1:
+                    graph.increase_highest_colornum()
+                    new_color = current_color.split(graph.highest_colornum, color_dict[color_key][count])
                     partition[new_color.id] = new_color
 
                     if len(new_color.vertices) < len(current_color.vertices) or current_color.is_in_queue:
@@ -104,10 +107,13 @@ def refine(graph: Graph):
                         queue.append(current_color)
                         current_color.set_in_queue()
 
-    return 1, partition
+    if len(partition) == len(graph.vertices):
+        return 1, partition
+
+    return -1, partition
 
 
-def count_isomorphisms(G: Graph, H: Graph, D:list, I: list, all_twins: list, count=False, useTwins=False):
+def count_isomorphisms(G: Graph, H: Graph, D: list, I: list, all_twins: list, count=False, useTwins=False):
     # Pre-processing
     tempD = D[:]
     tempI = I[:]
@@ -117,48 +123,60 @@ def count_isomorphisms(G: Graph, H: Graph, D:list, I: list, all_twins: list, cou
     for vertex in H.vertices:
         vertex.colornum = 0
 
-    if len(D) >= 1 and D[0] is not None:
-        for i, vertex in enumerate(D):
-            D[i].colornum = i+1
-            I[i].colornum = i+1
+    i = 0
+    if D:
+        for vertex in D:
+            D[i].colornum = i + 1
+            I[i].colornum = i + 1
+            i += 1
 
-    # result, partition_g, partition_h = refine(G, H)
-    result = refine(G)
+    G.set_highest_vertex_colornum(i)
+    H.set_highest_vertex_colornum(i)
+
+    result1, partition1 = refine(G)
+    result2, partition2 = refine(H)
+
+    result = -1
+    if partition1 != partition2:
+        result = 0
+    elif result1 == 1:
+        result = 1
 
     if result == 1 or result == 0:
         return result
 
     vertex_x = None
 
-    # See if a twin is in a color with 4 or more members
-    # If there are twins in a color partition, set the color (C) and use one of the twins to branch upon (vertex_x)
-    if useTwins:
-        for twins in all_twins:
-            for vertex in twins:
-                for color in partition_g:
-                    if len(color) >= 2:
-                        C = color
-                        vertex_x = vertex
-                        break
-                # If we have found a twin, we don't need to keep looking for a vertex to branch upon
-                if vertex_x is not None:
-                    break
+    best_color1 = None
+    best_color2 = None
+
+    for color_key in partition1:
+        color1 = partition1[color_key]
+        offset = 2
+
+        if len(color1.vertices) == 1:
+            tempD.append(color1.vertices.head.data)
+            tempI.append(partition2[color_key].vertices.head.data)
+        elif len(color1.vertices) - offset == 0:
+            best_color1 = color1
+            best_color2 = partition2[color_key]
+            break
+        elif len(color1.vertices) - offset > 0:
+            best_color1 = color1
+            best_color2 = partition2[color_key]
+
+    vertex_x = best_color1.vertices.head.data
+    tempD.append(vertex_x)
 
     num = 0
 
-    # Loop over all the collected vertices of graph H and call this function recursively
-    # We use the vertices selected earlier from graph G and H in D and I respectively
-    for vertex in c_h.vertices:
-        # Make sure to copy the list and not actually change it, to make sure each iteration doesn't keep adding to I
+    for vertex_y in best_color2.vertices:
+        tempI.append(vertex_y)
+        num += count_isomorphisms(G, H, tempD, tempI, [], count=count, useTwins=useTwins)
+        tempI.remove(vertex_y)
 
-        if len(tempI) < len(tempD):
-            tempI.append(vertex.data)
-        else:
-            tempI[len(tempD) - 1] = vertex.data
-        num += count_isomorphisms(G, H, tempD, tempI, all_twins, count=count, useTwins=useTwins)
         if num > 0 and not count:
             return num
-        # If we only want to know if the graphs are isomorphic, we can stop once we found at least 1 automorphism
 
     return num
 
@@ -220,7 +238,10 @@ def run(path, use_twins: bool, count: bool):
 
             while fast_index < number_of_graphs:
                 if slow_index < fast_index:
-                    new_total = compare_graphs(graphs[slow_index], graphs[fast_index], slow_index, fast_index, use_twins, count)
+                    new_total = compare_graphs(graphs[0], graphs[2], slow_index, fast_index,
+                                               use_twins, count)
+                    # new_total = compare_graphs(graphs[slow_index], graphs[fast_index], slow_index, fast_index,
+                    #                            use_twins, count)
                     if new_total != 0:
                         temp.append(fast_index)
                         total = new_total
@@ -246,13 +267,13 @@ def run_count_sample(use_twins: bool, count: bool):
         # "bigtrees": [1, 2, 3],
         # "cographs": [1],
         # "cubes": [3, 4, 5, 6, 7, 8, 9],
+        "cubes": [3],
         # "modules": ["C", "D"],
         # "products": [72, 216],
         # "torus": [24, 72, 144],
         # "torus": [24, 72, 144]
         # "trees": [11, 36, 90],
         # "wheeljoin": [14, 19, 25, 33],
-        "wheeljoin": [14],
         # "wheelstar": [12, 15, 16]
     }
     extension = ".grl"
@@ -262,4 +283,14 @@ def run_count_sample(use_twins: bool, count: bool):
             run(f'{base_path}/{sample_name}{identifier}{extension}', use_twins, count)
 
 
-run_count_sample(use_twins=True, count=True)
+# run_count_sample(use_twins=True, count=True)
+
+with open('graphs/results/example.gr') as f:
+    g = load_graph(f)
+    with open('before.dot', 'w') as b:
+        write_dot(g, b)
+    for vertex in g:
+        vertex.colornum = 0
+    refine(g)
+    with open('after.dot', 'w') as a:
+        write_dot(g, a)
