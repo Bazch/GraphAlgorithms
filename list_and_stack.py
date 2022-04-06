@@ -9,6 +9,7 @@ class Node:
 
 
 class doubly_linked_list:
+    _iter_nodes = False
 
     def __len__(self):
         return self.size
@@ -19,16 +20,24 @@ class doubly_linked_list:
 
     def __iter__(self):
         current = self.head
-        while current is not None:
-            yield current
-            current = current.next
+        if not self._iter_nodes:
+            while current is not None:
+                next = current.next
+                yield current.data
+                current = next
+        else:
+            current = self.head
+            while current is not None:
+                next = current.next
+                yield current
+                current = next
 
     def __reversed__(self):
         current = self.head
         while current.next is not None:
             current = current.next
         while current is not None:
-            yield current
+            yield current.data
             current = current.prev
 
     def __repr__(self):
@@ -42,6 +51,9 @@ class doubly_linked_list:
                 current = current.next
         string += ']'
         return string
+
+    def set_iter_nodes(self, value: bool):
+        self._iter_nodes = value
 
     def push(self, new_val):
         new_node = Node(new_val)
@@ -103,17 +115,20 @@ class doubly_linked_list:
         if self.head == dele:
             self.head = dele.next
             self.size -= 1
-            return
 
-        # Change next only if node to be deleted is NOT
-        # the last node
-        if dele.next is not None:
-            dele.next.prev = dele.prev
+            dele.next.prev = None
+            dele.next = None
+            return
 
         # Change prev only if node to be deleted is NOT
         # the first node
         if dele.prev is not None:
             dele.prev.next = dele.next
+
+        # Change next only if node to be deleted is NOT
+        # the last node
+        if dele.next is not None:
+            dele.next.prev = dele.prev
 
         self.size -= 1
 
