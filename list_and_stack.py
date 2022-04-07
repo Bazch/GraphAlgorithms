@@ -22,9 +22,8 @@ class doubly_linked_list:
         current = self.head
         if not self._iter_nodes:
             while current is not None:
-                next = current.next
                 yield current.data
-                current = next
+                current = current.next
         else:
             current = self.head
             while current is not None:
@@ -115,9 +114,7 @@ class doubly_linked_list:
         if self.head == dele:
             self.head = dele.next
             self.size -= 1
-
             dele.next.prev = None
-            dele.next = None
             return
 
         # Change prev only if node to be deleted is NOT
@@ -168,7 +165,3 @@ class stack:
             return True
         else:
             return False
-
-# G = Graph(n=10, directed=False)
-# DLL = doubly_linked_list()
-# DLL.append

@@ -225,6 +225,7 @@ class Graph(object):
         self._directed = directed
         self._next_label_value = 0
         self._highest_vertex = 0
+        self._highest_colornum = 0
 
         for i in range(n):
             self.add_vertex(Vertex(self))
@@ -279,6 +280,10 @@ class Graph(object):
     @property
     def highest_vertex(self) -> int:
         return self._highest_vertex
+
+    @property
+    def highest_colornum(self) -> int:
+        return self._highest_colornum
 
     @property
     def edges(self) -> List["Edge"]:
@@ -357,6 +362,9 @@ class Graph(object):
     def increase_highest_vertex(self):
         self._highest_vertex += 1
 
+    def increase_highest_colornum(self):
+        self._highest_colornum += 1
+
     def __add__(self, other: "Graph") -> "Graph":
         """
         Make a disjoint union of two graphs.
@@ -368,11 +376,15 @@ class Graph(object):
         for vertex in self.vertices:
             new_vertex = Vertex(I, vertex.label)
             new_vertex.original_graph = self
+            if hasattr(vertex, 'colornum'):
+                new_vertex.colornum = vertex.colornum
             vertex_dict[vertex] = new_vertex
-        for vertex in other.vertices:
-            new_vertex = Vertex(I, vertex.label)
+        for other_vertex in other.vertices:
+            new_vertex = Vertex(I, other_vertex.label)
             new_vertex.original_graph = other
-            vertex_dict[vertex] = new_vertex
+            if hasattr(other_vertex, 'colornum'):
+                new_vertex.colornum = other_vertex.colornum
+            vertex_dict[other_vertex] = new_vertex
         for edge in self.edges:
             new_edge = Edge(vertex_dict[edge.tail], vertex_dict[edge.head])
             I.add_edge(new_edge)
@@ -421,11 +433,11 @@ class Graph(object):
         """
         return v in u.neighbours and (not self.directed or any(e.head == v for e in u.incidence))
 
-    def highest_vertex_number(self):
-        labels = []
-        for vertex in self.vertices:
-            labels.append(vertex.label)
-        self._highest_vertex = max(labels)
+    def set_highest_vertex_number(self, value: int):
+        self._highest_vertex = value
+
+    def set_highest_vertex_colornum(self, value: int):
+        self._highest_colornum = value
 
     def deep_copy(self):
         new_graph = Graph(directed=self.directed, simple=self.simple)
@@ -433,6 +445,8 @@ class Graph(object):
         vertex_dict = {}
         for vertex in self.vertices:
             v = Vertex(new_graph, vertex.label)
+            if hasattr(vertex, 'colornum'):
+                v.colornum = vertex.colornum
             vertex_dict[vertex] = v
             new_graph.add_vertex(v)
         for edge in self.edges:
