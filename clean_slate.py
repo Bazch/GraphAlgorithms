@@ -72,32 +72,37 @@ def refine_color(color: ColorClass):
             for neighbouring_vertex in neighbour.neighbours:
                 if neighbouring_vertex.colornum == vertex.colornum:
                     count += 1
-            if vertex.colornum not in color_dict:
-                color_dict[vertex.colornum] = {count: set()}
-                color_dict[vertex.colornum][count].add(neighbour)
-            elif count not in color_dict[vertex.colornum]:
-                color_dict[vertex.colornum][count] = set()
-                color_dict[vertex.colornum][count].add(neighbour)
+            if neighbour.colornum not in color_dict:
+                color_dict[neighbour.colornum] = {count: set()}
+                color_dict[neighbour.colornum][count].add(neighbour)
+            elif count not in color_dict[neighbour.colornum]:
+                color_dict[neighbour.colornum][count] = set()
+                color_dict[neighbour.colornum][count].add(neighbour)
             else:
-                color_dict[vertex.colornum][count].add(neighbour)
+                color_dict[neighbour.colornum][count].add(neighbour)
     return color_dict
 
 
 def refine(graph: Graph):
     partition = collect_colors(graph)
     queue = doubly_linked_list()
-    queue.append(partition[0])
-    partition[0].set_in_queue()
+    for color_id in partition:
+        queue.append(partition[color_id])
+        partition[color_id].set_in_queue()
+    # queue.append(partition[0])
+    # partition[0].set_in_queue()
 
     for current_color in queue:
         color_dict = refine_color(current_color)
 
         for color_key in color_dict:
+            if not len(partition[color_key].vertices) > 1:
+                continue
             number_of_neighbours_dict = color_dict[color_key]
             for count in number_of_neighbours_dict:
-                if len(color_dict[color_key][count]) < len(current_color.vertices) and len(color_dict[color_key]) > 1:
+                if len(number_of_neighbours_dict[count]) < len(partition[color_key].vertices):
                     graph.increase_highest_colornum()
-                    new_color = current_color.split(graph.highest_colornum, color_dict[color_key][count])
+                    new_color = partition[color_key].split(graph.highest_colornum, number_of_neighbours_dict[count])
                     partition[new_color.id] = new_color
 
                     if len(new_color.vertices) < len(current_color.vertices) or current_color.is_in_queue:
