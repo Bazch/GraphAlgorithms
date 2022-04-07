@@ -93,11 +93,11 @@ def compare_graphs(G: Graph, H: Graph, g_label, h_label, use_twins, count):
     twins = count_twins(copy1)
 
     # attempt at the disjoint union approach
-    # I = copy1+copy2
-    # total = count_isomorphisms(I, copy2, [], [], twins, useTwins=use_twins, count=count)
+    I = copy1+copy2
+    total = branch(I, copy1, [], [])
 
-    total = count_isomorphisms(copy1, copy2, [], [], twins, useTwins=use_twins, count=count)
-    # total = count_isomorphisms(G, H, [], [], twins, useTwins=use_twins, count=count)
+    #total = count_isomorphisms(copy1, copy2, [], [], twins, useTwins=use_twins, count=count)
+
 
     return total
 
@@ -130,10 +130,7 @@ def run(path, use_twins: bool, count: bool):
 
             while fast_index < number_of_graphs:
                 if slow_index < fast_index:
-                    new_total = compare_graphs(graphs[0], graphs[2], slow_index, fast_index,
-                                               use_twins, count)
-                    # new_total = compare_graphs(graphs[slow_index], graphs[fast_index], slow_index, fast_index,
-                    #                            use_twins, count)
+                    new_total = compare_graphs(graphs[slow_index], graphs[fast_index], slow_index, fast_index, use_twins, count)
                     if new_total != 0:
                         temp.append(fast_index)
                         total = new_total
@@ -152,18 +149,18 @@ def run(path, use_twins: bool, count: bool):
     print('')
 
 
-@profile
+#@profile
 def run_count_sample(use_twins: bool, count: bool):
     base_path = "graphs"
     sample_names = {
         # "bigtrees": [1, 2, 3],
         # "cographs": [1],
         # "cubes": [3, 4, 5, 6, 7, 8, 9],
-        "cubes": [3],
+        "cubes": [3, 4],
         # "modules": ["C", "D"],
         # "products": [72, 216],
         # "torus": [24, 72, 144],
-        # "torus": [24, 72, 144]
+        "torus": [24, 72]
         # "trees": [11, 36, 90],
         # "wheeljoin": [14, 19, 25, 33],
         # "wheelstar": [12, 15, 16]
@@ -175,14 +172,11 @@ def run_count_sample(use_twins: bool, count: bool):
             run(f'{base_path}/{sample_name}{identifier}{extension}', use_twins, count)
 
 
-# run_count_sample(use_twins=True, count=True)
+run_count_sample(use_twins=True, count=True)
 
-with open('graphs/results/example.gr') as f:
-    g = load_graph(f)
-    with open('before.dot', 'w') as b:
-        write_dot(g, b)
-    for vertex in g:
-        vertex.colornum = 0
-    refine(g)
-    with open('after.dot', 'w') as a:
-        write_dot(g, a)
+# with open('graphs/cubes3.grl') as f:
+#     graph_list = load_graph(f, read_list=True)
+#
+# print(compare_graphs(graph_list[0][1], graph_list[0][3], [], [], False, True))
+
+
