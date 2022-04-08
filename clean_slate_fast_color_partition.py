@@ -17,20 +17,23 @@ def collect_colors(graph: Graph):
 
 def refine_color(color: ColorClass):
     color_dict = {}
+    neighbours = {}
     for vertex in color.vertices:
         for neighbour in vertex.neighbours:
-            count = 0
-            for neighbouring_vertex in neighbour.neighbours:
-                if neighbouring_vertex.colornum == vertex.colornum:
-                    count += 1
-            if neighbour.colornum not in color_dict:
-                color_dict[neighbour.colornum] = {count: set()}
-                color_dict[neighbour.colornum][count].add(neighbour)
-            elif count not in color_dict[neighbour.colornum]:
-                color_dict[neighbour.colornum][count] = set()
-                color_dict[neighbour.colornum][count].add(neighbour)
+            if neighbour not in neighbours:
+                neighbours[neighbour] = 1
             else:
-                color_dict[neighbour.colornum][count].add(neighbour)
+                neighbours[neighbour] += 1
+    for n in neighbours:
+        count = neighbours[n]
+        if n.colornum not in color_dict:
+            color_dict[n.colornum] = {count: set()}
+            color_dict[n.colornum][count].add(n)
+        elif count not in color_dict[n.colornum]:
+            color_dict[n.colornum][count] = set()
+            color_dict[n.colornum][count].add(n)
+        else:
+            color_dict[n.colornum][count].add(n)
     return color_dict
 
 
@@ -56,12 +59,12 @@ def refine(graph: Graph, other_graph: Graph):
                     new_color = partition[color_key].split(graph.highest_colornum, number_of_neighbours_dict[count])
                     partition[new_color.id] = new_color
 
-                    if len(new_color.vertices) < len(current_color.vertices) or current_color.is_in_queue:
+                    if len(new_color.vertices) < len(partition[color_key].vertices) or partition[color_key].is_in_queue:
                         queue.append(new_color)
                         new_color.set_in_queue()
                     else:
-                        queue.append(current_color)
-                        current_color.set_in_queue()
+                        queue.append(partition[color_key])
+                        partition[color_key].set_in_queue()
     is_equal = check_if_equal_partition(partition, other_graph)
     if not is_equal:
         return 0, partition
