@@ -50,7 +50,7 @@ def refine(graph: Graph, other_graph: Graph):
         color_dict = refine_color(current_color)
 
         for color_key in color_dict:
-            if not len(partition[color_key].vertices) > 1:
+            if not len(partition[color_key].vertices) > 2:
                 continue
             number_of_neighbours_dict = color_dict[color_key]
             for count in number_of_neighbours_dict:

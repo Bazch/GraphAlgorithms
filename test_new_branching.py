@@ -33,13 +33,13 @@ def branch(mixed_graph: Graph, child_graph: Graph, D: list, I: list):
 
         if len(color1.vertices) == 2:
             for vertex in color1.vertices:
-                if vertex.original_graph == child_graph:
-                    tempD.append(vertex)
-                else:
-                    tempI.append(vertex)
+                if vertex not in D and vertex not in I:
+                    if vertex.original_graph == child_graph1:
+                        tempD.append(vertex)
+                    else:
+                        tempI.append(vertex)
         elif len(color1.vertices) - offset == 0:
             best_color = color1
-            break
         elif len(color1.vertices) - offset > 0:
             best_color = color1
 
